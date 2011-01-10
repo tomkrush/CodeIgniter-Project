@@ -2,6 +2,10 @@
 
 To use this code download a copy of CodeIgniter and replace the application folder with the one in this repo. To run the migrations you must enter your MySQL database credentials into the database.php file.
 
+### Creating Migrations
+
+We'll talk about this at a later time.
+
 ## Running Migrations
 
 Once you have connected CI to the database, migrations can be run by hitting the url /migrations. This is **not** for production projects. To create a migration goto the url /migrations/create/CreateProjectTable. CreateProjectTable can be replaced with any name you want for the migration. This does not generate the table code, you must do that yourself.
