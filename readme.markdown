@@ -35,7 +35,7 @@ This is an early port of ActiveRecord from Rails 2.x.
 		}
 	}
 	
-The only requirements for a model is the fields must be defined.
+The only requirements for a model is the fields must be defined. I am thinking about taking out the fields requirement. I do not see any valid reason why a model should no know this information based on how I built them.
 
 ## Validation
 
