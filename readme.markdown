@@ -37,6 +37,8 @@ The only requirements for a model is the fields must be defined.
 
 This class provides three validation methods with the option of creating more.
 
+### Predefined Validation Methods
+
 #### Presence
     $this->validates('name', array('presence' => TRUE));
 
@@ -51,6 +53,10 @@ The uniqueness method validates whether the a row already exists with a value fo
 
 If a scope is present, the uniqueness of a validation becomes more specific. In this case, the name will only validate if it does not exist in the section 1.
 
+### Creating validation methods
+
+This section will be filled in later.
+
 #### Length
     $this->validates('name', array('length', array('maximum' => 10));
 
@@ -62,13 +68,39 @@ A callback allows a model to extend the functionality of the methods provided by
 
 #### Available Callbacks
 
-- before_create
-- after_create
-- before_save
-- after_save
-- before_validation
-- after_validation
+- before_create($callback)
+- after_create($callback)
+- before_save($callback)
+- after_save($callback)
+- before_validation($callback)
+- after_validation($callback)
 
   $this->before_create('change_slug');
 	$this->before_create('check_something');
 	$this->after_create('create_notificiation');
+	
+## Finder Methods
+
+#### exists(conditions = NULL)
+
+Checks against the conditions if a row exists.
+
+#### counts(conditions = NULL)
+
+Returns the number of rows that match the given conditions.
+
+#### first(conditions = NULL)
+
+Returns the first row that matches the given conditions.
+
+#### last(conditions = NULL)
+
+Returns the last row that matches the given conditions.
+
+#### all($conditions = NULL)
+
+Returns the all rows that match the given conditions.
+
+#### find($conditions = array(), $page = 1, $limit = 25)
+
+Returns the requested amount of rows based on the conditions.
