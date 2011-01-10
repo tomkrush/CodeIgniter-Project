@@ -10,7 +10,7 @@ To edit migrations look at the applications/db in your CI project. There are exa
 
 ## Active Record
 
-This is an early loose port of ActiveRecord from Rails 2.x.
+This is an early port of ActiveRecord from Rails 2.x.
 
 ### Writing a model
 
@@ -32,3 +32,26 @@ This is an early loose port of ActiveRecord from Rails 2.x.
 	}
 	
 The only requirements for a model is the fields must be defined.
+
+### Validation
+
+This class provides three validation methods with the option of creating more.
+
+#### Presence
+    $this->validates('name', array('presence' => TRUE));
+
+The presence method validates whether a field is present or not.
+
+#### Uniqueness
+    $this->validates('name', array('uniqueness' => TRUE));
+
+The uniqueness method validates whether the a row already exists with a value for a certain field.
+
+    $this->validates('name', array('uniqueness' => array('scope' => array('section_id' => 1))));
+
+If a scope is present, the uniqueness of a validation becomes more specific. In this case, the name will only validate if it does not exist in the section 1.
+
+#### Length
+    $this->validates('name', array('length', array('maximum' => 10));
+
+The length method validates whether the string value has a certain length. Arguments for the length are maximum and minimum. Both arguments are optional.
