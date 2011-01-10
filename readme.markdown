@@ -75,9 +75,9 @@ A callback allows a model to extend the functionality of the methods provided by
 - before_validation($callback)
 - after_validation($callback)
 
-  $this->before_create('change_slug');
-	$this->before_create('check_something');
-	$this->after_create('create_notificiation');
+		$this->before_create('change_slug');
+		$this->before_create('check_something');
+		$this->after_create('create_notificiation');
 	
 ## Finder Methods
 
