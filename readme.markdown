@@ -8,11 +8,11 @@ Once you have connected CI to the database, migrations can be run by hitting the
 
 To edit migrations look at the applications/db in your CI project. There are examples in there.
 
-## Active Record
+# Active Record
 
 This is an early port of ActiveRecord from Rails 2.x.
 
-### Writing a model
+## Writing a model
 
 	class Blogs_Model extends My_Model 
 	{	
@@ -33,7 +33,7 @@ This is an early port of ActiveRecord from Rails 2.x.
 	
 The only requirements for a model is the fields must be defined.
 
-### Validation
+## Validation
 
 This class provides three validation methods with the option of creating more.
 
@@ -55,3 +55,20 @@ If a scope is present, the uniqueness of a validation becomes more specific. In 
     $this->validates('name', array('length', array('maximum' => 10));
 
 The length method validates whether the string value has a certain length. Arguments for the length are maximum and minimum. Both arguments are optional.
+
+## Callbacks
+
+A callback allows a model to extend the functionality of the methods provided by My_Model. Callbacks are stacked, this allows you to add many callbacks to keep the code clean.
+
+#### Available Callbacks
+
+- before_create
+- after_create
+- before_save
+- after_save
+- before_validation
+- after_validation
+
+  $this->before_create('change_slug');
+	$this->before_create('check_something');
+	$this->after_create('create_notificiation');
