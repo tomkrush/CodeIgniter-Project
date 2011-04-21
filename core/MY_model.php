@@ -1,10 +1,11 @@
 <?php
 
-class MY_Model extends Model 
+class MY_Model extends CI_Model 
 {
 	var $table_name = '';
 	var $timestamps = TRUE;
 	var $fields = array();
+	var $transient = array();
 	var $primary_key = 'id';
 	
 	var $validates = FALSE;
@@ -25,7 +26,7 @@ class MY_Model extends Model
 	
 	function __construct() 
 	{
-		parent::Model();
+		parent::__construct();
 		
 		$this->init();
 		
@@ -123,7 +124,7 @@ VALIDATION
 
 	function validate_presence($field, $value, $options)
 	{
-		if ( ! isset($value) )
+		if ( ! isset($value) || (isset($value) && $value == ''))
 		{
 			$this->errors[] = array($field, ucfirst($field).' is required');
 			return FALSE;
@@ -146,8 +147,16 @@ VALIDATION
 				if ( isset($values[$scope]) ) $conditions[$scope] = $values[$scope];
 			} 
 			
-			if ( $this->exists($conditions) )
+			if ( isset($options['exclude_self']) && $options['exclude_self'] == TRUE )
 			{
+				if ( isset($values[$this->primary_key]) )
+				{
+					$conditions[$this->primary_key.' !='] = $values[$this->primary_key];
+				}
+			}
+						
+			if ( $this->exists($conditions) )
+			{				
 				$this->errors[] = array($field, ucfirst($field).' "'.$value.'" already exist');
 		 		return FALSE;
 			}
@@ -183,6 +192,42 @@ VALIDATION
 		return TRUE;
 	}
 	
+	public function validate_confirm($field, $value, $options, $values)
+	{
+		$confirm_field = "confirm_{$field}";
+		
+		if ( ! array_key_exists($confirm_field, $values) )
+		{
+			$this->errors[] = array($field, "Confirm {$value} is required");
+			return FALSE;
+		}
+		
+		$confirm = $values[$confirm_field];
+		
+		if ( isset($value, $confirm) )
+		{
+			if ( $value != $confirm )
+			{
+				$this->errors[] = array($field, ucfirst($field)." doesn't match confirmation");
+				return FALSE;
+			}
+		}
+		
+		return TRUE;		
+	}
+	
+	public function errors()
+	{
+		$errors = array();
+		
+		foreach($this->errors as $error)
+		{
+			$errors[] = $error[1];
+		}
+		
+		return $errors;
+	}
+	
 /*-------------------------------------------------
 INITALIZERS
 -------------------------------------------------*/
@@ -194,6 +239,11 @@ INITALIZERS
 		{
 			$this->fields[] = $this->primary_key;
 		}
+	}
+	
+	function transient($fields)
+	{
+		$this->transient = func_get_args();
 	}
 	
 	function tablename($table_name)
@@ -232,8 +282,22 @@ WRITE FUNCTIONS
 			}
 		}
 	
-		if ( $this->validate($create) )
+		foreach($this->transient as $field)
 		{
+			if ( array_key_exists($field, $values) )
+			{
+				$create[$field] = $values[$field];
+			}
+		}
+	
+		if ( $this->validate($create) )
+		{	
+			if ( $this->timestamps )
+			{
+				$create[$this->created_at_column_name] = time();
+				$create[$this->updated_at_column_name] = time();
+			}
+
 			// Callbacks
 			$callbacks = $this->before_create + $this->before_save;
 
@@ -242,11 +306,13 @@ WRITE FUNCTIONS
 				$temp_create = $this->$callback($create);
 				$create = $temp_create ? $temp_create : $create;
 			}
-			
-			if ( $this->timestamps )
+
+			foreach($this->transient as $field)
 			{
-				$create[$this->created_at_column_name] = time();
-				$create[$this->updated_at_column_name] = time();
+				if ( array_key_exists($field, $values) )
+				{
+					unset($create[$field]);
+				}
 			}
 
 			// Create Row
@@ -278,20 +344,40 @@ WRITE FUNCTIONS
 			}
 		}
 		
+		foreach($this->transient as $field)
+		{
+			if ( array_key_exists($field, $values) )
+			{
+				$update[$field] = $values[$field];
+			}
+		}
+		
+		$update[$this->primary_key] = $id;
+
 		if ( $this->validate($update) )
 		{
+			if ( $this->timestamps )
+			{
+				$update[$this->updated_at_column_name] = time();
+			}
+	
 			// Callbacks
 			$callbacks = $this->before_save;
 			foreach($callbacks as $callback)
 			{
 				$temp_update = $this->$callback($update);
 				$update = $temp_update ? $temp_update : $update;
-			}	
-	
-			if ( $this->timestamps )
-			{
-				$update[$this->updated_at_column_name] = time();
 			}
+
+			foreach($this->transient as $field)
+			{
+				if ( array_key_exists($field, $values) )
+				{
+					unset($update[$field]);
+				}
+			}		
+		
+			unset($update[$this->primary_key]);
 		
 			$this->db->update($this->table_name, $update, array($this->primary_key => $id));
 
@@ -303,9 +389,12 @@ WRITE FUNCTIONS
 		return $this->first($id);		
 	}
 
-	function destroy($id)
+	function destroy($conditions = NULL)
 	{
-		$this->db->delete($this->table_name, array($this->primary_key => $id));
+		$conditions = is_numeric($conditions) || ! is_assoc($conditions) ? array($this->primary_key => $conditions) : $conditions;	
+		$conditions = is_array($conditions) ? $conditions : array();		
+		
+		$this->db->delete($this->table_name, $conditions);
 
 		return true;
 	}
@@ -315,7 +404,7 @@ FINDERS
 -------------------------------------------------*/	
 	function exists($conditions = NULL)
 	{
-		$conditions = is_integer($conditions) || ! is_assoc($conditions) ? array($this->primary_key => $conditions) : $conditions;	
+		$conditions = is_numeric($conditions) || ! is_assoc($conditions) ? array($this->primary_key => $conditions) : $conditions;	
 		$conditions = is_array($conditions) ? $conditions : array();
 
 		$this->_find($conditions);
@@ -334,9 +423,9 @@ FINDERS
 	
 	function first($conditions = NULL)
 	{	
-		$conditions = is_integer($conditions) ? array($this->primary_key => $conditions) : $conditions;
+		$conditions = is_numeric($conditions) ? array($this->primary_key => $conditions) : $conditions;
 		$conditions = is_array($conditions) ? $conditions : array();
-		
+				
 		$this->_find($conditions);
 		$this->db->order_by($this->primary_key.' ASC');
 		$this->db->limit(1);
@@ -344,9 +433,9 @@ FINDERS
 		return $this->db->get();
 	}
 	
-	function last($conditions = array())
+	function last($conditions = NULL)
 	{		
-		$conditions = is_integer($conditions) ? array($this->primary_key => $conditions) : $conditions;
+		$conditions = is_numeric($conditions) ? array($this->primary_key => $conditions) : $conditions;
 		$conditions = is_array($conditions) ? $conditions : array();
 		
 		$this->_find($conditions);
@@ -356,12 +445,12 @@ FINDERS
 		return $this->db->get();
 	}
 	
-	function all($conditions = array())
+	function all($conditions = NULL)
 	{
 		return $this->find($conditions, 1, 0);		
 	}
 	
-	function find($conditions = array(), $page = 1, $limit = 25)
+	function find($conditions = array(), $page = 1, $limit = 10)
 	{
 		if ( is_array($conditions) && ! is_assoc($conditions) )
 		{
@@ -388,13 +477,29 @@ FINDERS
 		return $this->db->get();		
 	}
 	
+	private function field_exists($field)
+	{
+		list($field) = explode(' ', $field); 
+		
+		$fields = $this->fields;
+		$fields[] = $this->primary_key;
+		
+		if ( $this->timestamps )
+		{
+			$fields[] = $this->created_at_column_name;
+			$fields[] = $this->updated_at_column_name;
+		}
+		
+		return in_array($field, $fields);
+	}
+	
 	function _find($conditions = array())
 	{	
 		if ( is_array($conditions) )
 		{
 			foreach($conditions as $key => $value)
 			{
-				if ( in_array($key, $this->fields) )
+				if ( $this->field_exists($key) )
 				{
 					if ( is_array($value) )
 					{

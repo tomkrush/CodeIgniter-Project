@@ -1,11 +1,11 @@
 <?php
 
 // Yeah I know this controller was originally for pages
-class Pages extends Controller 
+class Pages extends CI_Controller 
 {
 	function __construct()
 	{
-		parent::Controller();	
+		parent::__construct();	
 	}
 	
 	function index()

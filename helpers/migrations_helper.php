@@ -42,14 +42,88 @@ function create_schema_table_if_not_exists()
 	), NULL, TRUE);		
 }
 
-function schema_version()
+function schema_created()
 {
 	$CI =& get_instance();
 	
-	$row = $CI->db->select_max('version')->get('schema_migrations')->row();
-	$version = $row ? $row->version : FALSE;		
+	return $CI->db->table_exists('schema_migrations');
+}
+
+function schema_version()
+{
+	$schema_created = schema_created();
 	
-	return $version;
+	if ( $schema_created )
+	{
+		$CI =& get_instance();
+	
+		$row = $CI->db->select_max('version')->get('schema_migrations')->row();
+		$version = $row ? $row->version : FALSE;		
+	
+		return $version;
+	}
+	
+	return FALSE;
+}
+
+function migration_path()
+{
+	return APPPATH.'db/migrate/';
+}
+
+function local_migration_files()
+{
+	$path = APPPATH.'db/migrate/';
+			
+	// Force files into numerical order
+	$files = directory_map($path);
+	sort($files);
+	
+	return $files;
+}
+
+function migration_up()
+{
+	// Schema Information
+	create_schema_table_if_not_exists();
+	$current_schema_version = schema_version();
+	$new_schema_version = NULL;
+
+	$path = migration_path();
+
+	$files = local_migration_files();
+					
+	// Migrate each file
+	foreach($files as $file)
+	{
+		$file_path = $path . $file;
+	
+		$class = explode('_', $file, 2);
+		$new_schema_version = strtotime($class[0]);
+			
+		// Only execute a migration if it NEEDs to be done
+		if ( $current_schema_version < $new_schema_version )
+		{			
+			$class = explode('.', $class[1]);
+			$class = $class[0];
+	
+			require($file_path);
+	
+			$migration = new $class;
+			$migration->up();
+		}
+	}
+
+	if ( $new_schema_version > $current_schema_version) set_schema_version($new_schema_version);	
+}
+
+function local_migration_version()
+{
+	$files = local_migration_files();
+	$last = end($files);
+
+	$class = explode('_', $last, 2);
+	return strtotime($class[0]);
 }
 
 function set_schema_version($version)
@@ -61,6 +135,11 @@ function set_schema_version($version)
 
 function create_table($table_name, $columns = array(), $options = array(), $if_not_exists = FALSE)
 {
+	$CI =& get_instance();
+
+	$driver = $CI->db->dbdriver ;
+
+
 	$columns_sql = '';
 	$options_sql = '';
 	
@@ -68,6 +147,8 @@ function create_table($table_name, $columns = array(), $options = array(), $if_n
 	{
 		$id_name = isset($options['primary_key']) ? $options['primary_key'] : 'id';
 		$id = array('name' => $id_name, 'primary_key' => TRUE, 'NOT_NULL' => TRUE, 'AUTO_INCREMENT' => TRUE);		
+
+		if ( $driver == 'pdo' ) unset($id['AUTO_INCREMENT']);
 
 		array_unshift($columns, $id);
 	}
@@ -100,15 +181,6 @@ function create_table($table_name, $columns = array(), $options = array(), $if_n
 			// NOT NULL
 			$columns_sql .= isset($column['NOT_NULL']) ? " NOT NULL" : NULL;
 			
-			$default = isset($column['default']) ? $column['default'] : NULL;
-			
-			if ( $type == 'boolean' )
-			{
-				$default = $default ? 1 : 0;
-			}
-			
-			$columns_sql .= isset($default) ? " DEFAULT '{$default}'" : NULL;
-			
 			// AUTO INCREMENT
 			$columns_sql .= isset($column['AUTO_INCREMENT']) ? " AUTO_INCREMENT" : NULL;
 
@@ -118,7 +190,7 @@ function create_table($table_name, $columns = array(), $options = array(), $if_n
 	
 	$columns_sql .= isset($id_name) ? "  PRIMARY KEY (`{$id_name}`)\n" : NULL;
 	
-	$options_sql .= " CHARSET=utf8";
+	$options_sql .= $driver == 'pdo' ? NULL : " CHARSET=utf8";
 
 	$if_not_exists_sql = NULL;
 
@@ -129,8 +201,6 @@ function create_table($table_name, $columns = array(), $options = array(), $if_n
 
 	
 	$sql = "CREATE TABLE {$if_not_exists_sql} `{$table_name}` (\n{$columns_sql}) {$options_sql};\n\n";
-
-	$CI =& get_instance();
 
 	if ( ! $if_not_exists )
 	{
@@ -171,6 +241,10 @@ function create_column($table_name, $options = array())
 	$type = isset($options['type']) ? $options['type'] : 'integer';
 	$column_sql .= " "._MigrationDataType($type);
 
+	// DEFAULT
+	$default = array_key_exists('default', $options) ? $options['default'] : NULL;
+	if ( isset($default) ) $column_sql .= " DEFAULT '".$default.'\''; 
+
 	// NOT NULL
 	$column_sql .= isset($options['NOT_NULL']) ? " NOT NULL" : NULL;
 	
@@ -199,6 +273,10 @@ function change_column($table_name, $target_column_name, $options)
 
 	// NOT NULL
 	$column_sql .= isset($options['NOT_NULL']) ? " NOT NULL" : NULL;
+
+	// DEFAULT
+	$default = array_key_exists('default', $options) ? $options['default'] : NULL;
+	if ( isset($default) ) $column_sql .= " DEFAULT '".$default.'\''; 
 	
 	// AUTO INCREMENT
 	$column_sql .= isset($options['AUTO_INCREMENT']) ? " AUTO_INCREMENT" : NULL;
@@ -219,17 +297,39 @@ function drop_column($table_name, $column_name)
 
 function _MigrationDataType($type)
 {
-	if ( $type == 'binary' ) 					$type = 'blob';
-	else if ( $type == 'boolean') 		$type = 'tinyint(1)';
-	else if ( $type == 'date' ) 			$type = 'date';
-	else if ( $type == 'datetime' ) 	$type = 'datetime';
-	else if ( $type == 'decimal' ) 		$type = 'decimal';
-	else if ( $type == 'float' ) 			$type = 'float';
-	else if ( $type == 'integer' ) 		$type = 'int(11)';
-	else if ( $type == 'string' ) 		$type = 'varchar(255)';
-	else if ( $type == 'text' ) 			$type = 'text';
-	else if ( $type == 'time' ) 			$type = 'time';
-	else if ( $type == 'timestamp' ) 	$type = 'datetime';
+	$CI =& get_instance();
+	$driver = $CI->db->dbdriver ;
+		
+	switch($driver)
+	{
+		case 'pdo':
+			if ( $type == 'binary' ) 					$type = 'blob';
+			else if ( $type == 'boolean') 		$type = 'boolean';
+			else if ( $type == 'date' ) 			$type = 'date';
+			else if ( $type == 'datetime' ) 	$type = 'datetime';
+			else if ( $type == 'decimal' ) 		$type = 'decimal';
+			else if ( $type == 'float' ) 			$type = 'float';
+			else if ( $type == 'integer' ) 		$type = 'integer';
+			else if ( $type == 'string' ) 		$type = 'varchar(255)';
+			else if ( $type == 'text' ) 			$type = 'text';
+			else if ( $type == 'time' ) 			$type = 'datetime';
+			else if ( $type == 'timestamp' ) 	$type = 'datetime';		
+		break;
+		
+		default:
+			if ( $type == 'binary' ) 					$type = 'blob';
+			else if ( $type == 'boolean') 		$type = 'tinyint(1)';
+			else if ( $type == 'date' ) 			$type = 'date';
+			else if ( $type == 'datetime' ) 	$type = 'datetime';
+			else if ( $type == 'decimal' ) 		$type = 'decimal';
+			else if ( $type == 'float' ) 			$type = 'float';
+			else if ( $type == 'integer' ) 		$type = 'int(11)';
+			else if ( $type == 'string' ) 		$type = 'varchar(255)';
+			else if ( $type == 'text' ) 			$type = 'text';
+			else if ( $type == 'time' ) 			$type = 'time';
+			else if ( $type == 'timestamp' ) 	$type = 'datetime';		
+		break;
+	}	
 	
 	return $type;
 }
