@@ -393,8 +393,10 @@ WRITE FUNCTIONS
 	{
 		$conditions = is_numeric($conditions) || ! is_assoc($conditions) ? array($this->primary_key => $conditions) : $conditions;	
 		$conditions = is_array($conditions) ? $conditions : array();		
+				
+		$this->_find($conditions);
 		
-		$this->db->delete($this->table_name, $conditions);
+		$this->db->delete($this->table_name);
 
 		return true;
 	}
