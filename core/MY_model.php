@@ -24,6 +24,101 @@ class MY_Model extends CI_Model
 	var $before_validation = array();
 	var $after_validation = array();
 	
+	private $relationships = array('has_many' => array(), 'has_one' => array(), 'belongs_to' => array());
+	private $relationship_vars = array();
+	private $base_filter = null;
+	private $base_join = null;
+	private $row = null;
+	private $is_row = false;
+	
+	function __get($var) {
+		$CI =& get_instance();
+		
+		if (isset($CI->$var)) return $CI->$var;
+		//if (parent::$var) return parent::$var;
+		
+		//check if var is a relationship var, if so create object
+		if ($this->is_row && in_array($var, $this->relationship_vars))
+		{
+			$pluralObject   = plural(strtolower($var));
+			$singularObject = singular(strtolower($var));
+			
+			if (array_key_exists($var, $this->relationships['has_many']))
+			{
+				if (!isset($this->$pluralObject))
+				{
+					$modelName = ucwords($pluralObject).'_Model';
+					
+					//load model
+					$this->load->model($modelName);
+					
+					//create instance of model
+					$this->$pluralObject = clone $this->$modelName;
+					
+					if (isset($this->relationships['has_many'][$var]['through'])) {
+						//create join and base_filter
+						$this->$pluralObject->set_base_join($this->relationships['has_many'][$var]['through'].' t', 't.'.$singularObject.'_id = '.$pluralObject.'.id');
+						$this->$pluralObject->set_base_filter(array(singular($this->table_name).'_id' => $this->row->id));
+					}
+					else {
+						//create base_filter
+						$this->$pluralObject->set_base_filter(array(singular($this->table_name).'_id' => $this->row->id));
+					}
+				}
+				return $this->$pluralObject;
+			}
+			elseif (array_key_exists($var, $this->relationships['has_one']))
+			{
+				if (!isset($this->$singularObject))
+				{
+					$modelName = ucwords($pluralObject).'_Model';
+					
+					//load model
+					$this->load->model($modelName);
+					
+					//create instance of model and base_filter
+					$this->$singularObject = clone $this->$modelName;
+					$this->$singularObject->set_row($this->$singularObject->first(array(singular($this->table_name).'_id' => $this->row->id))->row());
+				}
+				return $this->$singularObject;
+			}
+			elseif (array_key_exists($var, $this->relationships['belongs_to']))
+			{
+				if (!isset($this->$singularObject))
+				{
+					$modelName = ucwords($pluralObject).'_Model';
+					
+					//load model
+					$this->load->model($modelName);
+					
+					//create instance of model and base_filter
+					$this->$singularObject = clone $this->$modelName;
+					$field = $singularObject.'_id';
+					$this->$singularObject->set_row($this->$singularObject->first(array('id' => $this->row->$field))->row());
+				}
+				return $this->$singularObject;
+			}
+		}
+		elseif ($this->is_row && isset($this->row->$var)) {
+			return $this->row()->$var;
+		}
+		elseif ($this->is_row && isset($this->row->row) && isset($this->row->row->$var)) {
+			return $this->row->row->$var;
+		}
+		return true;
+	}
+	
+	function __isset($var)
+	{
+		if ($this->is_row && isset($this->row->$var)) {
+			return true;
+		}
+		elseif ($this->is_row && isset($this->row->row) && isset($this->row->row->$var)) {
+			return true;
+		}
+		return false;
+	}
+	
 	function __construct() 
 	{
 		parent::__construct();
@@ -31,6 +126,8 @@ class MY_Model extends CI_Model
 		$this->init();
 		
 		$this->_tablename();
+		
+		$this->load->helper('inflector');
 	}
 	
 	function init()
@@ -38,6 +135,51 @@ class MY_Model extends CI_Model
 
 	}
 	
+/*-------------------------------------------------
+RELATIONSHIPS
+-------------------------------------------------*/
+	function has_many($object, $settings = array())
+	{
+		$this->relationships['has_many'][$object] = $settings;
+		
+		$this->relationship_vars[] = plural($object);
+	}
+	function has_one($object, $settings = array())
+	{
+		$this->relationships['has_one'][$object] = $settings;
+		
+		$this->relationship_vars[] = singular($object);
+	}
+	function belongs_to($object, $settings = array())
+	{
+		$this->relationships['belongs_to'][$object] = $settings;
+		
+		$this->relationship_vars[] = singular($object);
+	}
+	function set_base_filter($conditions)
+	{
+		if (is_array($conditions) === false) return;
+		$this->base_filter = $conditions;
+	}
+	function set_base_join($table, $on)
+	{
+		$this->base_join = array($table, $on);
+	}
+
+/*-------------------------------------------------
+ROW STUFF
+-------------------------------------------------*/
+	function set_row($row)
+	{
+		$this->is_row = true;
+		$this->row = $row;
+	}
+	function row()
+	{
+		if ($this->is_row) return $this->row;
+		return;
+	}
+
 /*-------------------------------------------------
 CALLBACKS
 -------------------------------------------------*/
@@ -423,31 +565,37 @@ FINDERS
 	
 	function first($conditions = NULL)
 	{	
-		$conditions = is_numeric($conditions) ? array($this->primary_key => $conditions) : $conditions;
+		/*$conditions = is_integer($conditions) ? array($this->primary_key => $conditions) : $conditions;
 		$conditions = is_array($conditions) ? $conditions : array();
-				
+		
 		$this->_find($conditions);
 		$this->db->order_by($this->primary_key.' ASC');
 		$this->db->limit(1);
 
-		return $this->db->get();
+		return $this->db->get();*/
+		$this->db->order_by($this->primary_key.' ASC');
+		$this->db->limit(1);
+		return $this->find($conditions);
 	}
 	
 	function last($conditions = NULL)
 	{		
-		$conditions = is_numeric($conditions) ? array($this->primary_key => $conditions) : $conditions;
+		/*$conditions = is_integer($conditions) ? array($this->primary_key => $conditions) : $conditions;
 		$conditions = is_array($conditions) ? $conditions : array();
 		
 		$this->_find($conditions);
 		$this->db->order_by($this->primary_key.' DESC');
 		$this->db->limit(1);
 
-		return $this->db->get();
+		return $this->db->get();*/
+		$this->db->order_by($this->primary_key.' DESC');
+		$this->db->limit(1);
+		return $this->find($conditions);
 	}
 	
 	function all($conditions = NULL)
 	{
-		return $this->find($conditions, 1, 0);		
+		return $this->find($conditions ? $conditions : array(), 1, 0);		
 	}
 	
 	function find($conditions = array(), $page = 1, $limit = 10)
@@ -458,6 +606,15 @@ FINDERS
 			$conditions = array();
 			
 			$conditions[$this->primary_key] = $ids;
+		}
+		
+		if ($this->base_filter !== null)
+		{
+			$conditions = array_merge($this->base_filter, $conditions);
+		}
+		if ($this->base_join !== null)
+		{
+			$this->db->join($this->base_join[0], $this->base_join[1]);
 		}
 				
 		$this->_find($conditions);
@@ -474,7 +631,16 @@ FINDERS
 			}
 		}
 
-		return $this->db->get();		
+		$r = $this->db->get();
+		$r->result_object();
+		for ($i=0, $len=count($r->result_object); $i<$len; $i++)
+		{
+			$obj = clone $this;
+			$obj->set_row($r->result_object[$i]);
+			$r->result_object[$i] = $obj;
+		}
+
+		return $r;		
 	}
 	
 	private function field_exists($field)
