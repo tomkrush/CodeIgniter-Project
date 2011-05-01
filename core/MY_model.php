@@ -144,30 +144,34 @@ RELATIONSHIPS
 		
 		$this->relationship_vars[] = plural($object);
 	}
+	
 	function has_one($object, $settings = array())
 	{
 		$this->relationships['has_one'][$object] = $settings;
 		
 		$this->relationship_vars[] = singular($object);
 	}
+	
 	function belongs_to($object, $settings = array())
 	{
 		$this->relationships['belongs_to'][$object] = $settings;
 		
 		$this->relationship_vars[] = singular($object);
 	}
+	
 	function set_base_filter($conditions)
 	{
 		if (is_array($conditions) === false) return;
 		$this->base_filter = $conditions;
 	}
+	
 	function set_base_join($table, $on)
 	{
 		$this->base_join = array($table, $on);
 	}
 
 /*-------------------------------------------------
-ROW STUFF
+ROW SET & GET
 -------------------------------------------------*/
 	function set_row($row)
 	{
