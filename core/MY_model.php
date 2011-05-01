@@ -2,40 +2,40 @@
 
 class MY_Model extends CI_Model 
 {
-	var $table_name = '';
-	var $timestamps = TRUE;
-	var $fields = array();
-	var $transient = array();
-	var $primary_key = 'id';
-	
-	var $validates = FALSE;
-	var $field_validations = array();
-	var $errors = array();
-	
-	var $created_at_column_name = 'created_at';
-	var $updated_at_column_name = 'updated_at';
-	
-	var $before_save = array();
-	var $after_save = array();
-	
-	var $before_create = array();
-	var $after_create = array();
+	protected $table_name = '';
+	protected $timestamps = TRUE;
+	protected $fields = array();
+	protected $transient = array();
+	protected $primary_key = 'id';
 
-	var $before_validation = array();
-	var $after_validation = array();
+	protected $validates = FALSE;
+	protected $field_validations = array();
+	protected $errors = array();
+
+	protected $created_at_column_name = 'created_at';
+	protected $updated_at_column_name = 'updated_at';
+
+	protected $before_save = array();
+	protected $after_save = array();
+
+	protected $before_create = array();
+	protected $after_create = array();
+   
+	protected $before_validation = array();
+	protected $after_validation = array();
 	
-	private $relationships = array('has_many' => array(), 'has_one' => array(), 'belongs_to' => array());
-	private $relationship_vars = array();
-	private $base_filter = null;
-	private $base_join = null;
-	private $row = null;
-	private $is_row = false;
+	protected $relationships = array('has_many' => array(), 'has_one' => array(), 'belongs_to' => array());
+	protected $relationship_vars = array();
+	protected $base_filter = null;
+	protected $base_join = null;
+	protected $row = null;
+	protected $is_row = false;
 	
-	function __get($var) {
+	function __get($var) 
+	{
 		$CI =& get_instance();
 		
 		if (isset($CI->$var)) return $CI->$var;
-		//if (parent::$var) return parent::$var;
 		
 		//check if var is a relationship var, if so create object
 		if ($this->is_row && in_array($var, $this->relationship_vars))
@@ -527,7 +527,7 @@ WRITE FUNCTIONS
 			$callbacks = $this->after_save;
 			foreach($callbacks as $callback) $this->$callback($id);	
 		}
-		
+
 		return $this->first($id);		
 	}
 
@@ -544,7 +544,7 @@ WRITE FUNCTIONS
 /*-------------------------------------------------
 FINDERS
 -------------------------------------------------*/	
-	function exists($conditions = NULL)
+	function exists($conditions = array())
 	{
 		$conditions = is_numeric($conditions) || ! is_assoc($conditions) ? array($this->primary_key => $conditions) : $conditions;	
 		$conditions = is_array($conditions) ? $conditions : array();
@@ -554,46 +554,30 @@ FINDERS
 		return $this->db->count_all_results() ? TRUE : FALSE;		
 	}	
 	
-	function count($conditions = NULL)
+	function count($conditions = array())
 	{
 		$conditions = is_array($conditions) ? $conditions : array();
 
 		$this->_find($conditions);
-		
+
 		return $this->db->count_all_results();		
 	}
 	
-	function first($conditions = NULL)
-	{	
-		/*$conditions = is_integer($conditions) ? array($this->primary_key => $conditions) : $conditions;
-		$conditions = is_array($conditions) ? $conditions : array();
-		
-		$this->_find($conditions);
-		$this->db->order_by($this->primary_key.' ASC');
-		$this->db->limit(1);
-
-		return $this->db->get();*/
+	function first($conditions = array())
+	{
 		$this->db->order_by($this->primary_key.' ASC');
 		$this->db->limit(1);
 		return $this->find($conditions);
 	}
 	
-	function last($conditions = NULL)
-	{		
-		/*$conditions = is_integer($conditions) ? array($this->primary_key => $conditions) : $conditions;
-		$conditions = is_array($conditions) ? $conditions : array();
-		
-		$this->_find($conditions);
-		$this->db->order_by($this->primary_key.' DESC');
-		$this->db->limit(1);
-
-		return $this->db->get();*/
+	function last($conditions = array())
+	{
 		$this->db->order_by($this->primary_key.' DESC');
 		$this->db->limit(1);
 		return $this->find($conditions);
 	}
 	
-	function all($conditions = NULL)
+	function all($conditions = array())
 	{
 		return $this->find($conditions ? $conditions : array(), 1, 0);		
 	}
