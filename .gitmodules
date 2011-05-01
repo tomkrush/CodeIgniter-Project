@@ -1,0 +1,6 @@
+[submodule "third_party/unit"]
+	path = third_party/unit
+	url = git@github.com:tomkrush/unit.git
+[submodule "third_party/jot"]
+	path = third_party/jot
+	url = git@github.com:tomkrush/Jot.git
