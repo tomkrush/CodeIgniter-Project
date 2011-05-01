@@ -22,13 +22,24 @@ class Tests extends CI_Controller
 		foreach($paths as $path)
 		{
 			$path = APPPATH.$path.'/';
-			$map = directory_map($path);
-		
-			if ( is_array($map) )
+			$tests_path = $path.'order.php';
+			
+			if (file_exists($tests_path))
 			{
-				foreach($map as $file)
+				require $tests_path;
+			}
+			else
+			{
+				$order = directory_map($path);
+			}
+		
+			if ( is_array($order) )
+			{
+				foreach($order as $file)
 				{
-					require_once($path.$file);
+					if ($file == 'tests.php') continue;
+					
+					require_once($path.$file.'.php');
 
 					$class = str_replace('.php', '', $file);
 
