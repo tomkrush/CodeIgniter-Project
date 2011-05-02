@@ -4,11 +4,11 @@ class Pages_Model extends My_Model
 {	
 	function init()
 	{
-		$this->fields('section_id', 'is_public', 'name', 'slug', 'title', 'keywords', 'description', 'content');
-		$this->validates('name', array('presence' => TRUE, 'uniqueness' => array('scope'=>'section_id'), 'length' => array('minimum' => 6, 'maximum' => 8)));
-		$this->validates('slug', array('presence' => TRUE, 'uniqueness' => array('scope' => 'section_id')));
+		$this->fields('blog_id', 'section_id', 'is_public', 'name', 'slug', 'title', 'keywords', 'description', 'content');
+		$this->validates('name', array('presence' => TRUE, 'uniqueness' => array('scope'=>'section_id', 'exclude_self' => TRUE)));
+		$this->validates('slug', array('presence' => TRUE, 'uniqueness' => array('scope' => 'section_id', 'exclude_self' => TRUE)));
 		
-		// $this->before_create('test');
+		$this->belongs_to('blog');
 	}
 	
 	function test($conditions)
