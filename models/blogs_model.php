@@ -9,6 +9,7 @@ class Blogs_Model extends My_Model
 		$this->validates('slug', array('presence' => TRUE, 'uniqueness' => array('exclude_self' => TRUE)));
 		
 		$this->has_many('articles');
+		$this->has_one('page');
 		$this->before_save('transform_slug');
 	}
 

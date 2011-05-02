@@ -11,6 +11,9 @@ class Pages extends CI_Controller
 	function index()
 	{		
 		$this->load->model('blogs_model');
-		$this->load->database();
+		$this->load->model('pages_model');
+		$this->load->model('articles_model');
+
+		$this->load->database();	
 	}
 }
