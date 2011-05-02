@@ -17,4 +17,9 @@ class Pages_Model extends My_Model
 		
 		return $conditions;
 	}
+	
+	public function prepared_url()
+	{
+		return 'http://example.com/'.$this->slug;
+	}
 }
