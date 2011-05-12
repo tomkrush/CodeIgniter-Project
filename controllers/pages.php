@@ -14,6 +14,12 @@ class Pages extends CI_Controller
 		$this->load->model('pages_model');
 		$this->load->model('articles_model');
 
-		$this->load->database();	
+		$this->load->database();
+		
+		$blog = $this->blogs_model->first();
+
+		$this->load->vars('blog', $blog);
+		
+		$this->load->view('index');
 	}
 }
