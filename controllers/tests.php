@@ -18,7 +18,7 @@ class Tests extends CI_Controller
 		$this->load->config('unit');
 		
 		$paths = $this->config->item('test_paths');
-		
+
 		foreach($paths as $path)
 		{
 			$path = APPPATH.$path.'/';
