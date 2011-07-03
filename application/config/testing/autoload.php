@@ -39,8 +39,7 @@
 
 $autoload['packages'] = array(
 	APPPATH.'third_party/unit',
-	APPPATH.'third_party/jot',
-	APPPATH.'third_party/jot_tests',
+	APPPATH.'third_party/jot'
 );
 
 

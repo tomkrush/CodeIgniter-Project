@@ -4,3 +4,6 @@
 [submodule "third_party/jot"]
 	path = third_party/jot
 	url = git@github.com:tomkrush/Jot.git
+[submodule "system/database/drivers/sqlite3"]
+	path = system/database/drivers/sqlite3
+	url = git@github.com:tomkrush/SQLite3-Driver.git

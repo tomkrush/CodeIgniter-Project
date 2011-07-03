@@ -1,1 +1,14 @@
-config/database.php
+*/.DS_Store
+
+*/config/database.php
+*/system/logs/log-*.php
+*/system/cache/*
+*/system/cache/!index.html
+
+*/config/database.php
+*/config/testing/database.php
+*db/*.db
+
+Starter.esproj
+
+.sass-cache

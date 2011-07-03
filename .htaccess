@@ -1,1 +1,15 @@
-Deny from all
+<IfModule mod_rewrite.c>
+	RewriteEngine on
+	RewriteCond $1 !^(index\.php|assets)
+	RewriteRule ^(.*)$ /index.php?/$1 [L]
+</IfModule>
+
+php_value upload_max_filesize 20M
+
+<IfModule !mod_rewrite.c>
+    # If we don't have mod_rewrite installed, all 404's
+    # can be sent to index.php, and everything works as normal.
+    # Submitted by: ElliotHaughin
+
+    ErrorDocument 404 /index.php
+</IfModule>
