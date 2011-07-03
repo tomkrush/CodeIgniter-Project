@@ -1,8 +1,8 @@
 [submodule "third_party/unit"]
-	path = third_party/unit
+	path = application/third_party/unit
 	url = git@github.com:tomkrush/unit.git
 [submodule "third_party/jot"]
-	path = third_party/jot
+	path = application/third_party/jot
 	url = git@github.com:tomkrush/Jot.git
 [submodule "system/database/drivers/sqlite3"]
 	path = system/database/drivers/sqlite3
