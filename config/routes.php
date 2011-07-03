@@ -38,6 +38,14 @@
 |
 */
 
+if ( ENVIRONMENT != 'production' )
+{
+	$route['migrations/create/(:any)']		= "migrations/create/$1";
+	$route['migrations/seed']				= "migrations/seed";
+	$route['migrations/reset']				= "migrations/reset";
+	$route['migrations'] 					= 'migrations/index';
+}
+
 $route['default_controller'] = "pages";
 $route['404_override'] = '';
 

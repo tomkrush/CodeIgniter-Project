@@ -1,4 +1,5 @@
 <?php
+
 class Migrations extends CI_Controller 
 {	
 	function __construct()
@@ -6,30 +7,24 @@ class Migrations extends CI_Controller
 		parent::__construct();
 
 		$this->load->database();
-		$this->load->helper(array('directory','migrations_helper'));
-
-		// Setup Migrations
-		migrations_directory_setup();
+		$this->load->helper(array('directory','jot_migrations'));	
 	}
 	
 	function index()
-	{	
-		migration_up();
-		
-		echo 'Migrations run';
+	{
+		$migrations = new JotMigrations();
+		$migrations->up();
 	}
 	
-	function created()
-	{
-		echo 'Migration Created';
+	function reset()
+	{		
+		$migrations = new JotMigrations();
+		$migrations->reset(TRUE);
 	}
 	
 	function create($path)
 	{
-		create_migration($path);
-
-		$CI =& get_instance();
-		$CI->load->helper('url');
-		redirect('migrations/created');
+		$migrations = new JotMigrations();
+		$migrations->create($path);
 	}
 }

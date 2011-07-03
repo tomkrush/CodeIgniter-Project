@@ -1,6 +1,20 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /*
+| -------------------------------------------------------------------
+|  Packages
+| -------------------------------------------------------------------
+| Prototype:
+|
+|  $config['packages'] = array(APPPATH.'third_party', '/usr/local/shared');
+|
+*/
+$config['packages'] = array(
+	APPPATH.'third_party/jot',
+	APPPATH.'third_party/unit'
+);
+
+/*
 |--------------------------------------------------------------------------
 | Base Site URL
 |--------------------------------------------------------------------------
