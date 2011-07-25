@@ -53,7 +53,7 @@ $autoload['packages'] = $CI->config->item('packages');
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array();
+$autoload['libraries'] = array('database');
 
 
 /*
@@ -65,7 +65,7 @@ $autoload['libraries'] = array();
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('array', 'url');
+$autoload['helper'] = array('array', 'url', 'common', 'jot_form');
 
 
 /*
