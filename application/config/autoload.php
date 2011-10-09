@@ -65,7 +65,7 @@ $autoload['libraries'] = array('database');
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('array', 'url', 'common', 'jot_form');
+$autoload['helper'] = array('array', 'url');
 
 
 /*
