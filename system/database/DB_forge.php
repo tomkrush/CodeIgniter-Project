@@ -258,7 +258,7 @@ class CI_DB_forge {
 
 		// add field info into field array, but we can only do one at a time
 		// so we cycle through
-		
+
 		foreach ($field as $k => $v)
 		{
 			$this->add_field(array($k => $field[$k]));
