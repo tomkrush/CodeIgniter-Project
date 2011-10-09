@@ -7,12 +7,12 @@ class Migrations extends CI_Controller
 		parent::__construct();
 
 		$this->load->database();
-		$this->load->helper(array('directory','jot_migrations'));	
+		$this->load->helper('jot_migrations');	
 	}
 	
 	function index()
 	{
-		if (ENVIRONMENT == 'development' || (ENVIRONMENT == 'production' && IS_CLI))
+		if (ENVIRONMENT == 'development' || IS_CLI)
 		{
 			$migrations = new JotMigrations();
 			$migrations->up();
@@ -21,7 +21,7 @@ class Migrations extends CI_Controller
 	
 	function reset()
 	{		
-		if (ENVIRONMENT == 'development' || (ENVIRONMENT == 'production' && IS_CLI))
+		if (ENVIRONMENT == 'development' || IS_CLI)
 		{
 			$migrations = new JotMigrations();
 			$migrations->reset(TRUE);
@@ -30,7 +30,7 @@ class Migrations extends CI_Controller
 	
 	function create($path)
 	{
-		if (ENVIRONMENT == 'development' || (ENVIRONMENT == 'production' && IS_CLI))
+		if (ENVIRONMENT == 'development' || IS_CLI)
 		{
 			$migrations = new JotMigrations();
 			$migrations->create($path);
