@@ -9,6 +9,6 @@
 */config/testing/database.php
 *db/*.db
 
-Starter.esproj
+*.esproj
 
 .sass-cache
