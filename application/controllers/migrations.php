@@ -12,19 +12,28 @@ class Migrations extends CI_Controller
 	
 	function index()
 	{
-		$migrations = new JotMigrations();
-		$migrations->up();
+		if (ENVIRONMENT == 'development' || (ENVIRONMENT == 'production' && IS_CLI))
+		{
+			$migrations = new JotMigrations();
+			$migrations->up();
+		}
 	}
 	
 	function reset()
 	{		
-		$migrations = new JotMigrations();
-		$migrations->reset(TRUE);
+		if (ENVIRONMENT == 'development' || (ENVIRONMENT == 'production' && IS_CLI))
+		{
+			$migrations = new JotMigrations();
+			$migrations->reset(TRUE);
+		}
 	}
 	
 	function create($path)
 	{
-		$migrations = new JotMigrations();
-		$migrations->create($path);
+		if (ENVIRONMENT == 'development' || (ENVIRONMENT == 'production' && IS_CLI))
+		{
+			$migrations = new JotMigrations();
+			$migrations->create($path);
+		}
 	}
 }
