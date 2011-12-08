@@ -17,6 +17,10 @@ class Migrations extends CI_Controller
 			$migrations = new JotMigrations();
 			$migrations->up();
 		}
+		else
+		{
+			show_404();
+		}
 	}
 	
 	function reset()
@@ -26,6 +30,10 @@ class Migrations extends CI_Controller
 			$migrations = new JotMigrations();
 			$migrations->reset(TRUE);
 		}
+		else
+		{
+			show_404();
+		}
 	}
 	
 	function create($path)
@@ -34,6 +42,10 @@ class Migrations extends CI_Controller
 		{
 			$migrations = new JotMigrations();
 			$migrations->create($path);
+		}
+		else
+		{
+			show_404();
 		}
 	}
 }
