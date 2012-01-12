@@ -10,42 +10,31 @@ class Migrations extends CI_Controller
 		$this->load->helper('jot_migrations');	
 	}
 	
+	public function _remap($method, $params = array())
+	{
+	    if (method_exists($this, $method) && (ENVIRONMENT == 'development' || IS_CLI))
+	    {
+	        return call_user_func_array(array($this, $method), $params);
+	    }
+	    
+	    show_404();
+	}
+	
 	function index()
 	{
-		if (ENVIRONMENT == 'development' || IS_CLI)
-		{
-			$migrations = new JotMigrations();
-			$migrations->up();
-		}
-		else
-		{
-			show_404();
-		}
+		$migrations = new JotMigrations();
+		$migrations->up();
 	}
 	
 	function reset()
 	{		
-		if (ENVIRONMENT == 'development' || IS_CLI)
-		{
-			$migrations = new JotMigrations();
-			$migrations->reset(TRUE);
-		}
-		else
-		{
-			show_404();
-		}
+		$migrations = new JotMigrations();
+		$migrations->reset(TRUE);
 	}
 	
 	function create($path)
 	{
-		if (ENVIRONMENT == 'development' || IS_CLI)
-		{
-			$migrations = new JotMigrations();
-			$migrations->create($path);
-		}
-		else
-		{
-			show_404();
-		}
+		$migrations = new JotMigrations();
+		$migrations->create($path);
 	}
 }
